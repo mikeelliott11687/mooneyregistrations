@@ -34,8 +34,16 @@ input[type=text]:focus,select:focus{border-color:#c8102e}
 .btn.sec{background:#21262d;border:1px solid #30363d}.btn.sec:hover{background:#30363d}
 #map-wrap{flex:1 1 auto;min-height:0;position:relative;width:100%}
 #map{position:absolute;inset:0}
-#legend{position:absolute;bottom:20px;right:8px;z-index:900;background:rgba(13,17,23,.95);border:1px solid #30363d;border-radius:8px;padding:8px 11px;max-height:62vh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;min-width:148px}
-#legend h3{font-size:.65em;color:#8b949e;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+#btn-legend{position:absolute;bottom:20px;right:8px;z-index:910;min-height:36px;padding:8px 14px;font-size:.8em;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#legend-backdrop{display:none;position:absolute;inset:0;z-index:920;background:rgba(0,0,0,.45);-webkit-tap-highlight-color:transparent}
+#legend-backdrop.open{display:block}
+#legend{display:none;position:absolute;bottom:64px;right:8px;z-index:930;background:rgba(13,17,23,.97);border:1px solid #30363d;border-radius:10px;padding:0;max-height:min(62vh,480px);width:min(280px,calc(100% - 16px));box-shadow:0 8px 28px rgba(0,0,0,.55);flex-direction:column;overflow:hidden}
+#legend.open{display:flex}
+.legend-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px 8px;border-bottom:1px solid #30363d;flex-shrink:0}
+#legend h3{font-size:.7em;color:#8b949e;text-transform:uppercase;letter-spacing:1px;margin:0}
+.legend-close{background:transparent;border:none;color:#c9d1d9;font-size:1.4em;line-height:1;cursor:pointer;min-width:36px;min-height:36px;border-radius:6px;padding:0;-webkit-tap-highlight-color:transparent}
+.legend-close:hover{background:#21262d;color:#fff}
+#leg-items{padding:8px 10px 10px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;flex:1;min-height:0}
 .li{display:flex;align-items:center;gap:5px;margin-bottom:4px;cursor:pointer;padding:6px 4px;border-radius:3px;min-height:32px;-webkit-tap-highlight-color:transparent}
 .li:hover{background:rgba(200,16,46,.12)}
 .li.off{opacity:.25}
@@ -83,7 +91,11 @@ input[type=text]:focus,select:focus{border-color:#c8102e}
   }
   select{padding-right:36px;background-position:right 12px center}
   .btn{min-height:44px;font-size:.9em;padding:10px 14px;border-radius:8px;-webkit-tap-highlight-color:transparent}
-  #legend{bottom:12px;right:6px;left:6px;min-width:0;max-width:none;max-height:38vh;padding:10px 12px}
+  #btn-legend{bottom:14px;right:10px;min-height:44px;padding:10px 16px;font-size:.9em;border-radius:8px}
+  #legend{bottom:auto;top:50%;left:50%;right:auto;transform:translate(-50%,-50%);width:min(340px,calc(100% - 28px));max-height:min(70vh,520px);border-radius:12px}
+  .legend-head{padding:12px 12px 10px}
+  .legend-close{min-width:44px;min-height:44px;font-size:1.55em}
+  #leg-items{padding:8px 12px 12px}
   .li{min-height:44px;padding:8px 6px;margin-bottom:2px}
   .ll{font-size:.85em}
   .lc{font-size:.75em}
@@ -127,7 +139,15 @@ input[type=text]:focus,select:focus{border-color:#c8102e}
 <div id="map-wrap">
   <div id="map"></div>
   <div id="badge" style="display:none"><b id="vis-n">—</b> aircraft shown</div>
-  <div id="legend" style="display:none"><h3>Model Legend</h3><div id="leg-items"></div></div>
+  <button type="button" id="btn-legend" class="btn sec" onclick="toggleLegend()" aria-expanded="false" aria-controls="legend">Legend</button>
+  <div id="legend-backdrop" onclick="closeLegend()" aria-hidden="true"></div>
+  <div id="legend" role="dialog" aria-modal="true" aria-labelledby="legend-title" aria-hidden="true">
+    <div class="legend-head">
+      <h3 id="legend-title">Model Legend</h3>
+      <button type="button" class="legend-close" onclick="closeLegend()" aria-label="Close legend">&times;</button>
+    </div>
+    <div id="leg-items"></div>
+  </div>
 </div>
 
 <div id="splash">
@@ -236,7 +256,21 @@ function buildLegend(){
   });
 }
 function syncLegend(){LEGEND.forEach(l=>{const e=document.getElementById('li-'+l.model);if(e)e.classList.toggle('off',hiddenModels.has(l.model));});}
-function toggleLegend(){const l=document.getElementById('legend');l.style.display=l.style.display==='none'?'block':'none';}
+function isLegendOpen(){return document.getElementById('legend').classList.contains('open');}
+function openLegend(){
+  document.getElementById('legend').classList.add('open');
+  document.getElementById('legend-backdrop').classList.add('open');
+  document.getElementById('legend').setAttribute('aria-hidden','false');
+  document.getElementById('btn-legend').setAttribute('aria-expanded','true');
+}
+function closeLegend(){
+  document.getElementById('legend').classList.remove('open');
+  document.getElementById('legend-backdrop').classList.remove('open');
+  document.getElementById('legend').setAttribute('aria-hidden','true');
+  document.getElementById('btn-legend').setAttribute('aria-expanded','false');
+}
+function toggleLegend(){isLegendOpen()?closeLegend():openLegend();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&isLegendOpen())closeLegend();});
 
 function toggleFilters(){
   const hdr=document.getElementById('hdr');
@@ -279,7 +313,7 @@ function buildSelectors(recs){
     `${cityCount.toLocaleString()} city-pinned + ${stateCount.toLocaleString()} state-center = ${totalCount.toLocaleString()} total | FAA ${DATA_DATE}`;
 
   document.getElementById('badge').style.display='block';
-  document.getElementById('legend').style.display='block';
+  closeLegend();
   document.getElementById('splash').style.display='none';
 })();
 </script>
