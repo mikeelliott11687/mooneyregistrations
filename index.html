@@ -8,31 +8,43 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#0d1117;color:#e6edf3}
-#map{position:absolute;top:52px;left:0;right:0;bottom:0}
-#hdr{position:absolute;top:0;left:0;right:0;height:52px;z-index:1000;background:linear-gradient(90deg,#161b22,#21262d);border-bottom:2px solid #c8102e;display:flex;align-items:center;gap:8px;padding:0 10px;overflow:hidden}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#0d1117;color:#e6edf3;display:flex;flex-direction:column}
+#hdr{position:relative;z-index:1000;flex-shrink:0;background:linear-gradient(90deg,#161b22,#21262d);border-bottom:2px solid #c8102e}
+#hdr-top{display:flex;align-items:center;gap:8px;padding:8px 10px;min-height:48px}
 #hdr h1{font-size:.88em;font-weight:700;color:#fff;white-space:nowrap;flex-shrink:0}
 #hdr h1 em{color:#c8102e;font-style:normal}
-#hdr-stats{font-size:.64em;color:#8b949e;white-space:nowrap;flex-shrink:0}
-#ctrls{display:flex;align-items:center;gap:6px;flex:1;overflow:hidden}
+#hdr-stats{font-size:.64em;color:#8b949e;white-space:nowrap;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+#btn-filters{display:none;min-height:44px;min-width:44px;padding:8px 14px;font-size:.85em}
+#ctrls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:0 10px 8px 10px}
+.ctrl{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .cl{font-size:.66em;color:#8b949e;white-space:nowrap}
-input[type=text],select{background:#0d1117;border:1px solid #30363d;color:#e6edf3;border-radius:5px;padding:3px 7px;font-size:.73em;outline:none}
-input[type=text]{width:130px}
+input[type=text],select{
+  background:#0d1117;border:1px solid #30363d;color:#e6edf3;border-radius:6px;
+  padding:6px 10px;font-size:14px;outline:none;min-height:36px;
+  -webkit-appearance:none;appearance:none;
+}
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238b949e' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;max-width:180px;
+}
+input[type=text]{width:150px}
 input[type=text]:focus,select:focus{border-color:#c8102e}
-.btn{background:#c8102e;border:none;color:#fff;border-radius:5px;padding:4px 9px;font-size:.71em;cursor:pointer;font-weight:600;white-space:nowrap;flex-shrink:0}
+.btn{background:#c8102e;border:none;color:#fff;border-radius:6px;padding:6px 12px;font-size:.8em;cursor:pointer;font-weight:600;white-space:nowrap;flex-shrink:0;min-height:36px}
 .btn:hover{background:#a00d24}
 .btn.sec{background:#21262d;border:1px solid #30363d}.btn.sec:hover{background:#30363d}
-#legend{position:absolute;bottom:20px;right:8px;z-index:900;background:rgba(13,17,23,.95);border:1px solid #30363d;border-radius:8px;padding:8px 11px;max-height:62vh;overflow-y:auto;min-width:148px}
+#map-wrap{flex:1 1 auto;min-height:0;position:relative;width:100%}
+#map{position:absolute;inset:0}
+#legend{position:absolute;bottom:20px;right:8px;z-index:900;background:rgba(13,17,23,.95);border:1px solid #30363d;border-radius:8px;padding:8px 11px;max-height:62vh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;min-width:148px}
 #legend h3{font-size:.65em;color:#8b949e;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-.li{display:flex;align-items:center;gap:5px;margin-bottom:4px;cursor:pointer;padding:2px 3px;border-radius:3px}
+.li{display:flex;align-items:center;gap:5px;margin-bottom:4px;cursor:pointer;padding:6px 4px;border-radius:3px;min-height:32px;-webkit-tap-highlight-color:transparent}
 .li:hover{background:rgba(200,16,46,.12)}
 .li.off{opacity:.25}
 .dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;border:1.5px solid rgba(255,255,255,.25)}
 .ll{font-size:.72em;flex:1}
 .lc{font-size:.63em;color:#8b949e}
-#badge{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:rgba(13,17,23,.9);border:1px solid #30363d;border-radius:14px;padding:2px 12px;font-size:.69em;color:#8b949e;z-index:900;pointer-events:none;white-space:nowrap}
+#badge{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(13,17,23,.9);border:1px solid #30363d;border-radius:14px;padding:4px 12px;font-size:.69em;color:#8b949e;z-index:900;pointer-events:none;white-space:nowrap}
 #badge b{color:#c8102e}
-#splash{position:absolute;inset:0;z-index:2000;background:rgba(10,14,20,.97);display:flex;align-items:center;justify-content:center}
+#splash{position:fixed;inset:0;z-index:2000;background:rgba(10,14,20,.97);display:flex;align-items:center;justify-content:center}
 .sp-card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:28px 32px;max-width:420px;width:90%;text-align:center}
 .sp-card h2{font-size:1.15em;color:#fff;margin-bottom:8px}
 .sp-card p{font-size:.8em;color:#8b949e;line-height:1.6}
@@ -46,28 +58,77 @@ input[type=text]:focus,select:focus{border-color:#c8102e}
 .pu-r{font-size:.76em;color:#c9d1d9;margin:2px 0;line-height:1.4}
 .pu-r b{color:#fff}
 .leaflet-control-attribution{font-size:.6em}
+
+/* Mobile / iPhone (~390px): collapsible sticky filter panel, large tap targets, native selects */
+@media (max-width:720px){
+  #hdr-top{padding:6px 10px;gap:6px}
+  #hdr h1{font-size:.82em;max-width:55%;overflow:hidden;text-overflow:ellipsis}
+  #hdr-stats{display:none}
+  #btn-filters{display:inline-flex;align-items:center;justify-content:center;margin-left:auto}
+  #ctrls{
+    display:none;flex-direction:column;align-items:stretch;gap:10px;
+    padding:0 12px 12px;max-height:min(55vh,420px);overflow-y:auto;
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+    border-top:1px solid #30363d;background:#161b22;
+  }
+  #hdr.filters-open #ctrls{display:flex}
+  #hdr.filters-open #btn-filters{background:#c8102e;border-color:#c8102e;color:#fff}
+  .ctrl{flex-direction:column;align-items:stretch;gap:4px;width:100%}
+  .ctrl-actions{flex-direction:row;gap:8px}
+  .ctrl-actions .btn{flex:1}
+  .cl{font-size:.78em;font-weight:600;color:#c9d1d9;letter-spacing:.02em}
+  input[type=text],select{
+    width:100%;max-width:none;min-height:44px;font-size:16px;padding:10px 12px;
+    border-radius:8px;
+  }
+  select{padding-right:36px;background-position:right 12px center}
+  .btn{min-height:44px;font-size:.9em;padding:10px 14px;border-radius:8px;-webkit-tap-highlight-color:transparent}
+  #legend{bottom:12px;right:6px;left:6px;min-width:0;max-width:none;max-height:38vh;padding:10px 12px}
+  .li{min-height:44px;padding:8px 6px;margin-bottom:2px}
+  .ll{font-size:.85em}
+  .lc{font-size:.75em}
+  #badge{font-size:.75em;padding:6px 14px}
+}
+@media (min-width:721px){
+  #hdr-top{display:flex;align-items:center}
+  #ctrls{display:flex!important;flex-direction:row;flex-wrap:wrap;align-items:center;padding:0 10px 8px;max-height:none;overflow:visible;border-top:none;background:transparent}
+  #btn-filters{display:none!important}
+}
 </style>
 </head>
 <body>
 
 <div id="hdr">
-  <h1>&#9992;&nbsp;Mooney Fleet&nbsp;<em>FAA Registry</em></h1>
-  <span id="hdr-stats"></span>
+  <div id="hdr-top">
+    <h1>&#9992;&nbsp;Mooney Fleet&nbsp;<em>FAA Registry</em></h1>
+    <span id="hdr-stats"></span>
+    <button type="button" class="btn sec" id="btn-filters" onclick="toggleFilters()" aria-expanded="false" aria-controls="ctrls">Filters</button>
+  </div>
   <div id="ctrls">
-    <span class="cl">Search</span>
-    <input type="text" id="q" placeholder="N-number or owner..." oninput="applyFilter()">
-    <span class="cl">Model</span>
-    <select id="sel-m" onchange="applyFilter()"><option value="">All Models</option></select>
-    <span class="cl">State</span>
-    <select id="sel-s" onchange="applyFilter()"><option value="">All States</option></select>
-    <button class="btn" onclick="resetAll()">Reset</button>
-    <button class="btn sec" onclick="toggleLegend()">Legend</button>
+    <div class="ctrl">
+      <label class="cl" for="q">Search</label>
+      <input type="text" id="q" placeholder="N-number or owner..." enterkeyhint="search" autocomplete="off" oninput="applyFilter()">
+    </div>
+    <div class="ctrl">
+      <label class="cl" for="sel-m">Model</label>
+      <select id="sel-m" onchange="applyFilter()"><option value="">All Models</option></select>
+    </div>
+    <div class="ctrl">
+      <label class="cl" for="sel-s">State</label>
+      <select id="sel-s" onchange="applyFilter()"><option value="">All States</option></select>
+    </div>
+    <div class="ctrl ctrl-actions">
+      <button type="button" class="btn" onclick="resetAll()">Reset</button>
+      <button type="button" class="btn sec" onclick="toggleLegend()">Legend</button>
+    </div>
   </div>
 </div>
 
-<div id="map"></div>
-<div id="badge" style="display:none"><b id="vis-n">—</b> aircraft shown</div>
-<div id="legend" style="display:none"><h3>Model Legend</h3><div id="leg-items"></div></div>
+<div id="map-wrap">
+  <div id="map"></div>
+  <div id="badge" style="display:none"><b id="vis-n">—</b> aircraft shown</div>
+  <div id="legend" style="display:none"><h3>Model Legend</h3><div id="leg-items"></div></div>
+</div>
 
 <div id="splash">
   <div class="sp-card">
@@ -177,6 +238,16 @@ function buildLegend(){
 function syncLegend(){LEGEND.forEach(l=>{const e=document.getElementById('li-'+l.model);if(e)e.classList.toggle('off',hiddenModels.has(l.model));});}
 function toggleLegend(){const l=document.getElementById('legend');l.style.display=l.style.display==='none'?'block':'none';}
 
+function toggleFilters(){
+  const hdr=document.getElementById('hdr');
+  const btn=document.getElementById('btn-filters');
+  const open=hdr.classList.toggle('filters-open');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  btn.textContent = open ? 'Close' : 'Filters';
+  // Let flex header resize, then tell Leaflet the map pane changed
+  requestAnimationFrame(()=>{ if(map) map.invalidateSize({animate:false}); });
+}
+
 function buildSelectors(recs){
   // Only populate selectors from city-geocoded records
   const cityRecs=recs.filter(r=>r[9]!=='state');
@@ -189,6 +260,7 @@ function buildSelectors(recs){
 
 (async()=>{
   map=L.map('map',{center:[39.5,-98.5],zoom:4,preferCanvas:true});
+  requestAnimationFrame(()=>{ map.invalidateSize({animate:false}); });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     maxZoom:18,
     attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | FAA Registry '+DATA_DATE
