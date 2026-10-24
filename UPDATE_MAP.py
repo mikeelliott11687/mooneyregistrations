@@ -3801,8 +3801,8 @@ print("Step 4/4  Building index.html...")
 skeleton_path = os.path.join(SCRIPT_DIR, "map_skeleton.html")
 if not os.path.exists(skeleton_path):
     print("  ERROR: map_skeleton.html not found in " + SCRIPT_DIR)
-    print("  Make sure the iOS-fixed map_skeleton.html is in the same folder as this script.
-  (Do not use an old skeleton from before the iPhone filter / blank-band fixes.)")
+    print("  Make sure the iOS-fixed map_skeleton.html is in the same folder as this script.")
+    print("  (Do not use an old skeleton from before the iPhone filter / blank-band fixes.)")
     input("Press Enter to exit...")
     sys.exit(1)
 
